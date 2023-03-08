@@ -1,7 +1,8 @@
 # 실행 방법
 
 * 아래와 같이 작성된 run.sh를 환경에 맞게 수정하여 실행할 수 있습니다.
-  * `--batch_size` 인자를 수정하여 batch size를 조절 할 수 있습니다.
+  * `--batch_size` 옵션을 통해 pre-training 사용할 batch size를 조절 할 수 있습니다.
+  * pre-training에 사용할 dataset의 경로를 `--data_path` 옵션으로 지정합니다.
 * SDA별 권장 batch size는 다음과 같습니다.
 
     | SDA            | batch size |
