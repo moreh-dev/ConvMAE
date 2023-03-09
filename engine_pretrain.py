@@ -45,9 +45,8 @@ def train_one_epoch(model: torch.nn.Module,
             loss, _, _ = model(samples, mask_ratio=args.mask_ratio)
 
         # No need to check this at every iteration
-        if (((data_iter_step + 1) / accum_iter) % print_freq) == 0 and not math.isfinite(loss_value):
-            loss_value = loss.item()
-            print("Loss is {}, stopping training".format(loss_value))
+        if (((data_iter_step + 1) / accum_iter) % print_freq) == 0 and not math.isfinite(loss.item()):
+            print("Loss is {}, stopping training".format(loss.item()))
             sys.exit(1)
 
         loss_value = loss.detach()
@@ -74,7 +73,6 @@ def train_one_epoch(model: torch.nn.Module,
             This calibrates different curves when batch size changes.
             """
             epoch_1000x = int((data_iter_step / len(data_loader) + epoch) * 1000)
-            #log_writer.add_scalar('train_loss', loss_value_reduce, epoch_1000x)
             log_writer.add_scalar('train_loss', loss_value, epoch_1000x)
             log_writer.add_scalar('lr', lr, epoch_1000x)
 

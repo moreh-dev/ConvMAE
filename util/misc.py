@@ -34,6 +34,8 @@ class SmoothedTensorValue(object):
         self.fmt = fmt
 
     def update(self, value, n=1):
+        if isinstance(value, (float, int)):
+            value = torch.tensor([value])
         self.deque.append(value)
         self.count += n
         self.total += value * n
