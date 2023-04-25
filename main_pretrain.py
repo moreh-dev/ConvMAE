@@ -121,7 +121,9 @@ def main(args):
             transforms.RandomResizedCrop(args.input_size, scale=(0.2, 1.0), interpolation=3),  # 3 is bicubic
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.ConvertImageDtype(torch.bfloat16)
+            ])
     dataset_train = datasets.ImageFolder(os.path.join(args.data_path, 'train'), transform=transform_train)
     print(dataset_train)
 
@@ -183,7 +185,7 @@ def main(args):
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
-        if args.distributed:
+        if True:
             data_loader_train.sampler.set_epoch(epoch)
         train_stats = train_one_epoch(
             model, data_loader_train,
@@ -211,6 +213,15 @@ def main(args):
 
 
 if __name__ == '__main__':
+
+    # Invoke graph execution before set_backend_config
+    a = torch.randn(3).cuda()
+    (a * 3).cpu()
+
+    from moreh.driver.common.config import set_backend_config, set_config
+    set_backend_config('miopen_mode', 3)
+    set_config('autocast_lower_precision_dtype', 'bf16')
+
     args = get_args_parser()
     args = args.parse_args()
     if args.output_dir:

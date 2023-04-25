@@ -305,7 +305,7 @@ def main(args):
     start_time = time.time()
     max_accuracy = 0.0
     for epoch in range(args.start_epoch, args.epochs):
-        if args.distributed:
+        if True:
             data_loader_train.sampler.set_epoch(epoch)
         train_stats = train_one_epoch(
             model, criterion, data_loader_train,
@@ -351,6 +351,15 @@ def main(args):
 
 
 if __name__ == '__main__':
+
+    # Invoke graph execution before set_backend_config
+    a = torch.randn(3).cuda()
+    (a * 3).cpu()
+
+    from moreh.driver.common.config import set_backend_config, set_config
+    set_backend_config('miopen_mode', 3)
+    set_config('autocast_lower_precision_dtype', 'bf16')
+
     args = get_args_parser()
     args = args.parse_args()
     if args.output_dir:
