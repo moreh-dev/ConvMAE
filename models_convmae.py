@@ -69,6 +69,7 @@ class MaskedAutoencoderConvViT(nn.Module):
         # --------------------------------------------------------------------------
 
         self.norm_pix_loss = norm_pix_loss
+        self.mse_loss = nn.MSELoss(reduction='sum')
 
         self.initialize_weights()
 
@@ -196,7 +197,8 @@ class MaskedAutoencoderConvViT(nn.Module):
         x = self.decoder_embed(x)
 
         # append mask tokens to sequence
-        mask_tokens = self.mask_token.repeat(x.shape[0], ids_restore.shape[1]  - x.shape[1], 1)
+        # self.mask_token (1, 1, X)
+        mask_tokens = self.mask_token.expand(x.shape[0], ids_restore.shape[1]  - x.shape[1], -1)
         x_ = torch.cat([x, mask_tokens], dim=1)  # no cls token
         x = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2]))  # unshuffle
 
@@ -225,10 +227,13 @@ class MaskedAutoencoderConvViT(nn.Module):
             var = target.var(dim=-1, keepdim=True)
             target = (target - mean) / (var + 1.e-6)**.5
 
-        loss = (pred - target) ** 2
-        loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
+        mask_bool = (mask == 0)
+        pred = torch.where(mask_bool.unsqueeze(-1).expand(-1, -1, target.size(2)), target, pred)
 
-        loss = (loss * mask).sum() / mask.sum()  # mean loss on removed patches
+        loss = self.mse_loss(pred, target)
+        loss /= target.size(2)
+        loss /= mask.sum()
+
         return loss
 
     def forward(self, imgs, mask_ratio=0.75):
